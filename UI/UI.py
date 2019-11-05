@@ -4,6 +4,8 @@ def EntradaConsola():
     nombre = input("Ingrese su nombre: ")
     print("Comenzemos doctor",nombre)
     print("====================CUESTIONARIO====================")
+
+
 def TomaDeDatos():
     atxt = input("El paciente cuenta con familiares que hayan padecido diabetes?")
     if atxt == 'Si' or atxt == 'si':
@@ -26,10 +28,25 @@ def TomaDeDatos():
     else:
         d=0
     return a,b,c,d
-    
+
+
+def CalcularSalida(a,b,c,d):
+    salidas = []
+    if a and b and c :
+        salida = 1
+    elif a and ((b or c) and d):
+        salida = 1
+    else:
+        salida = 0
+    salidas.append(salida)
+    return salidas
+
+
 def main():
     EntradaConsola()
     a,b,c,d = TomaDeDatos()
+    salidas = CalcularSalida(a,b,c,d)
+    print(salidas)
 
 
 main()
