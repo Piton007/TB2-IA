@@ -89,6 +89,6 @@ class PerceptronMulticapa:
         return x * (1 - x)
     
 if __name__ == "__main__":
-    Perceptron=PerceptronMulticapa([[0,0],[0,1],[1,0],[1,1]],[[0],[1],[1],[0]],1000,0.25,0.3)
-    Perceptron.test(2,3,1)
+    Perceptron=PerceptronMulticapa([[0,0,0,0],[0,1,1,1],[1,0,0,1],[1,1,0,0]],[[0],[1],[1],[0]],1000,0.25,0.3)
+    Perceptron.test(4,1,1)
     
