@@ -30,7 +30,7 @@ class PerceptronMulticapa:
     def predecir(self):
         resultado=""
         try:
-            salida_predecida=self.backpropagation()[0][0]
+            salida_predecida=self.backpropagation()[0][-1]
             resultado = 0 if 1-salida_predecida>salida_predecida else 1
         except:
             resultado = "Error"
@@ -100,10 +100,15 @@ class PerceptronMulticapa:
         self.patrones.pop(indice)
         self.resultados_esperados.pop(indice)
     
+    def get_patrones(self):
+        return len(self.patrones)
+
 if __name__ == "__main__":
     Perceptron=PerceptronMulticapa(4,2,1,0.5,0.3)
     Perceptron.agregar_patron([0,1,0,1])
     Perceptron.agregar_valor_esperado([0])
-    print(Perceptron.predecir())
+    Perceptron.agregar_patron([0,1,1,1])
+    Perceptron.agregar_valor_esperado([0])
+    print(Perceptron.entrenar())
     
     

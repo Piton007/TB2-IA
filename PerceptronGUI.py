@@ -28,6 +28,7 @@ class FLogin():
         self.root.title("Login")
         self.root.iconbitmap('icon.ico')
         self.root.resizable(width=False,height=False)
+        self.root.geometry("+{}+{}".format(int(self.root.winfo_screenwidth()/2)-160,int(self.root.winfo_screenheight()/2)-200))
         self.style=Estilos()
         self.nombre=StringVar()
         self.resized = Image.open('doc.png').resize((LOGO_WIDTH, LOGO_HEIGHT),Image.ANTIALIAS)
@@ -46,8 +47,6 @@ class FLogin():
         self.btnruta.grid(row=2,column=0,columnspan=2,sticky=(N,S),padx=10,pady=10)
     def toPrincipal(self):
         new_root=Toplevel()
-        
-        messagebox.showinfo(message="Bievenido Doc {}".format(self.nombre.get()), title="Diagnostico Diabetes Tipo I")
         self.root.withdraw()
         Dialog=FPrincipal(new_root,self.nombre.get())
         
@@ -56,8 +55,9 @@ class FPrincipal():
     def __init__(self,root,medico):
         self.perceptron=PerceptronMulticapaService()
         self.root=root
-        self.root.title("BackPropagation App".format(medico))
+        self.root.title("Diabetdetector - Doc {}".format(medico))
         self.root.resizable(width=False,height=False)
+        self.root.geometry("+{}+{}".format(int(self.root.winfo_screenwidth()/2)-160,50))
         self.root.iconbitmap("Icon.ico")
         self.style=Estilos()
         self.notebook=ttk.Notebook(self.root)
@@ -155,27 +155,41 @@ class FPrincipal():
         else:
             self.remove_widget_prueba()
             self.agregar_widget_entrenamiento()
-
+    def estan_campos_vacios(self):
+        return self.glucosa.get()=="" or self.neutrofilos.get()==""
+          
+    
     def entrenar(self):
+        if self.perceptron.obtener_size_patrones()>0:
+            resultados=self.perceptron.entrenar_perceptron()
+            confimarcion=messagebox.askyesno(message="El entrenamiento ha concluido satisfactoriamente!\n\n Desea ver el detalle de resultados ?", title="Entrenamiento")
+            if confimarcion:
+                messagebox.showinfo(message=self.generarMensajeFinal(resultados), title="Warning")
+        else:
+            messagebox.showwarning(message="Debe agregar al menos un caso para entrenar", title="Warning")
+            
         
-        resultados=self.perceptron.entrenar_perceptron()
         
-        messagebox.showinfo(message="El entrenamiento ha concluido satisfactoriamente!", title="Entrenamiento")
-
     def agregar_patron(self):
-        valorGlucosa= 0 if float(self.glucosa.get())<5.7 else 1
-        valorNeutrofilo= 0 if float(self.neutrofilos.get())<7600.0 else 1
-        self.perceptron.agregar_patrones([self.herencia.get(),valorGlucosa,self.fatiga.get(),valorNeutrofilo])
-        self.perceptron.agregar_valor_esperado([self.resultado_esperado.get()])
-        self.glucosa.set("")
-        self.neutrofilos.set("")
+        if not self.estan_campos_vacios():
+            valorGlucosa= 0 if float(self.glucosa.get())<5.7 else 1
+            valorNeutrofilo= 0 if float(self.neutrofilos.get())<7600.0 else 1
+            self.perceptron.agregar_patrones([self.herencia.get(),valorGlucosa,self.fatiga.get(),valorNeutrofilo])
+            self.perceptron.agregar_valor_esperado([self.resultado_esperado.get()])
+            self.glucosa.set("")
+            self.neutrofilos.set("")
+        else:
+            messagebox.showwarning(message="Llene los campos ", title="Warning")
 
     def generarJson(self,dic):
         text="***Resultados de ultimo entrenamiento***\n\nPeso final de neuronas escondidas: \n{}\nPeso final de bias escondida: \n{}\nPeso final de neuronas de salida: \n{}\nPeso final de bias de salida: \n{}\nActual error cuadratico medio con limite de {}: \n{}\nResultado Esperado: \n{}\n".format(dic.get("pesos_ocultos"),dic.get("bias_oculta"),dic.get("pesos_salidas"),dic.get("bias_salida"),dic.get("limite"),dic.get("error"),dic.get("resultado"))
         return text
 
     def generarMensajeFinal(self,resultados):
-       return "Resultado del entrenamiento: {:.5f}\nError cuadrático medio: {:.5f}".format(*resultados.get("resultado")[0],resultados.get("error"))
+        salida="\n"
+        for (i,resultado) in enumerate(resultados.get("resultado")):
+            salida+="Valor resultante de Patron {} : {:.5f}\n".format(i+1,resultado[0]) 
+        return "Resultados de entrenamiento: {}Error cuadrático medio: {:.5f}".format(salida,resultados.get("error"))
 
         
         

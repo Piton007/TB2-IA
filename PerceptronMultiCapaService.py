@@ -25,6 +25,8 @@ class PerceptronMulticapaService():
         self.perceptron_multicapa.agregar_valor_esperado(esperado)
     def obtener_prediccion(self):
         return self.perceptron_multicapa.predecir()
+    def obtener_size_patrones(self):
+        return self.perceptron_multicapa.get_patrones()
     
     
 
