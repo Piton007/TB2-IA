@@ -7,22 +7,38 @@ class PerceptronMulticapa:
         self.neuronas_salida=neuronas_salida
         self.limite_error_cuadratico=limite_error_cuadratico
         self.coeficiente_aprendizaje=coeficiente_aprendizaje
+        self.patrones=[]
+        self.resultados_esperados=[]
         self.inicializar_pesos()
 
-    def entrenar(self,patrones,resultados_esperados):
-        self.patrones=np.array(patrones)
-        self.resultados_esperados=np.array(resultados_esperados)
+    def entrenar(self):
+        self.patrones_np=np.array(self.patrones)
+        self.resultados_esperados_np=np.array(self.resultados_esperados)
         while True:
-            salida_capa_oculta,salida_predecida= [ x for x in self.propagacion_hacia_adelante()]
-            d_salida_predecida,d_capa_oculta=[x for x in self.propagacion_hacia_atras(salida_predecida,salida_capa_oculta)]
-            self.actualizacion_pesos(d_salida_predecida,d_capa_oculta,salida_capa_oculta)
+            salida_predecida=self.backpropagation()
             error_cuadratico=self.obtener_error_cuadratico_medio(salida_predecida)
             if error_cuadratico<self.limite_error_cuadratico:
                 break
         return dict(error=error_cuadratico,resultado=salida_predecida)
-        
+    
+    def backpropagation(self):
+        salida_capa_oculta,salida_predecida= [ salida for salida in self.propagacion_hacia_adelante()]
+        d_salida_predecida,d_capa_oculta=[d_salida for d_salida in self.propagacion_hacia_atras(salida_predecida,salida_capa_oculta)]
+        self.actualizacion_pesos(d_salida_predecida,d_capa_oculta,salida_capa_oculta)
+        return salida_predecida.tolist()
+
+    def predecir(self):
+        resultado=""
+        try:
+            salida_predecida=self.backpropagation()[0][0]
+            resultado = 0 if 1-salida_predecida>salida_predecida else 1
+        except:
+            resultado = "Error"
+        finally:
+            return resultado
+
     def obtener_error_cuadratico_medio(self,salida_predecida):
-        matriz_diferencia=np.subtract(self.resultados_esperados,salida_predecida)
+        matriz_diferencia=np.subtract(self.resultados_esperados_np,salida_predecida)
         matriz_potenciada=np.power(matriz_diferencia,2)
         return np.sum(matriz_potenciada)
     def inicializar_pesos(self):
@@ -44,11 +60,11 @@ class PerceptronMulticapa:
     def actualizacion_pesos(self,d_salida_predecida,d_capa_oculta,salida_capa_oculta):
         self.pesos_salidas += salida_capa_oculta.T.dot(d_salida_predecida) * self.coeficiente_aprendizaje
         self.bias_salida += np.sum(d_salida_predecida) * self.coeficiente_aprendizaje
-        self.pesos_ocultos += self.patrones.T.dot(d_capa_oculta) * self.coeficiente_aprendizaje
+        self.pesos_ocultos += self.patrones_np.T.dot(d_capa_oculta) * self.coeficiente_aprendizaje
         self.bias_oculta += np.sum(d_capa_oculta) * self.coeficiente_aprendizaje
         
     def propagacion_hacia_adelante_oculta(self):
-        activacion_capa_oculta = np.dot(self.patrones,self.pesos_ocultos)
+        activacion_capa_oculta = np.dot(self.patrones_np,self.pesos_ocultos)
         activacion_capa_oculta += self.bias_oculta
         salida_capa_oculta = self.sigmoid(activacion_capa_oculta)
         return salida_capa_oculta
@@ -59,7 +75,7 @@ class PerceptronMulticapa:
         return salida_predecida
     
     def propagacion_hacia_atras_salida(self,salida_predecida):
-        error = self.resultados_esperados - salida_predecida
+        error = self.resultados_esperados_np - salida_predecida
         d_salida_predecida = error * self.sigmoid_derivative(salida_predecida)
         return d_salida_predecida
     
@@ -73,10 +89,21 @@ class PerceptronMulticapa:
     
     def sigmoid_derivative(self,x):
         return x * (1 - x)
+
+    def agregar_patron(self,patron):
+        self.patrones.append(patron)
+
+    def agregar_valor_esperado(self,valor_esperado):
+        self.resultados_esperados.append(valor_esperado)
+
+    def eliminar_patron(self,indice):
+        self.patrones.pop(indice)
+        self.resultados_esperados.pop(indice)
     
 if __name__ == "__main__":
-    Perceptron=PerceptronMulticapa(4,2,1,0.25,0.3)
-    print(Perceptron.entrenar([[0,1,0,1]],[[0]]))
-    print(Perceptron.entrenar([[0,1,1,1]],[[1]]))
-    print(Perceptron.entrenar([[0,1,1,0]],[[1]]))
+    Perceptron=PerceptronMulticapa(4,2,1,0.5,0.3)
+    Perceptron.agregar_patron([0,1,0,1])
+    Perceptron.agregar_valor_esperado([0])
+    print(Perceptron.predecir())
+    
     

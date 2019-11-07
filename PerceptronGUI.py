@@ -18,7 +18,6 @@ def Estilos():
     style.theme_use("alt")
     style.configure("Test.TLabel",font="Arial 12",anchor=CENTER,width=9,foreground="black",background="gray94")
     style.configure("TButton",font="Arial 12 bold",anchor="center",foreground="gray38",background="red")
-    
     return style
 
 
@@ -27,6 +26,7 @@ class FLogin():
     def __init__(self):
         self.root=Tk()
         self.root.title("Login")
+        self.root.iconbitmap('icon.ico')
         self.root.resizable(width=False,height=False)
         self.style=Estilos()
         self.nombre=StringVar()
@@ -56,13 +56,13 @@ class FPrincipal():
     def __init__(self,root,medico):
         self.perceptron=PerceptronMulticapaService()
         self.root=root
-        self.root.title("Doc. {} - Entrenando".format(medico))
+        self.root.title("BackPropagation App".format(medico))
         self.root.resizable(width=False,height=False)
+        self.root.iconbitmap("Icon.ico")
         self.style=Estilos()
         self.notebook=ttk.Notebook(self.root)
         self.formulario=ttk.Frame(self.notebook)
         self.configuracion=ttk.Frame(self.notebook)
-        self.info=ttk.Frame(self.notebook)
         self.root.columnconfigure(0,weight=1)
         self.root.rowconfigure(0,weight=1)
         self.notebook.grid(row=0,column=0,sticky=(N,S,W,E))
@@ -70,6 +70,7 @@ class FPrincipal():
         self.coeficiente_aprendizaje=StringVar()
         self.limite_error_cuadratico=StringVar()
         self.herencia=IntVar()
+        self.modo=IntVar()
         self.fatiga=IntVar()
         self.resultado_esperado=IntVar()
         self.neutrofilos=StringVar()
@@ -80,16 +81,10 @@ class FPrincipal():
         self.formulario.columnconfigure(0,weight=1)
         self.defaultValues()
         self.configurar()
-        self.generarVistaInfo()
         self.generarVistaEntrenamiento()
         self.generarVistaConfiguracion()
-        self.notebook.add(self.formulario, text="Entrenamiento")
-        self.notebook.add(self.info,text="Resultados")
+        self.notebook.add(self.formulario, text="Principal")
         self.notebook.add(self.configuracion, text="Configuracion")
-    def generarVistaInfo(self):
-        
-        self.resultados=Text(self.info,font="Arial 14 bold",width=40,height=20)
-        self.resultados.pack(fill="none", expand=True)
 
     def generarVistaEntrenamiento(self):
         self.lblherencia=ttk.Label(self.formulario,text="El paciente cuenta con familiares que hayan padecido diabetes?")
@@ -105,8 +100,13 @@ class FPrincipal():
         self.rbFatigaNo=ttk.Radiobutton(self.formulario, text='No', variable=self.fatiga, value=0)
         self.inpLeucocitos=ttk.Entry(self.formulario,textvariable=self.neutrofilos,font="Arial 10 bold",width=40)
         self.inpGlucosa=ttk.Entry(self.formulario,textvariable=self.glucosa,font="Arial 10 bold",width=40)
-        self.btnEntrenar=ttk.Button(self.formulario,command=self.entrenar,text="Entrenar",width=11)
-        self.lblherencia.grid(row=0,column=0,columnspan=2,padx=10,pady=10,sticky=(N,S))
+        self.btnEntrenar=ttk.Button(self.formulario,command=self.entrenar,text="Entrenar")
+        self.btnAgregar=ttk.Button(self.formulario,command=self.agregar_patron,text="Agregar")
+        self.rbEntrenamiento=ttk.Radiobutton(self.formulario, text='Entrenamiento', variable=self.modo, value=1,command=self.filtrar_componentes)
+        self.rbPrueba=ttk.Radiobutton(self.formulario, text='Prueba', variable=self.modo, value=0,command=self.filtrar_componentes)
+        self.btnPrueba=ttk.Button(self.formulario,command=self.probar,text="Probar")
+        self.lblModo=ttk.Label(self.formulario,text="Modo")
+        self.lblherencia.grid(row=0,column=0,columnspan=3,padx=10,pady=10,sticky=(N,S))
         self.rbHerenciaSi.grid(row=1,column=0,pady=10)
         self.rbHerenciaNo.grid(row=1,column=1,pady=10)
         self.lblglucosa.grid(row=2,column=0,columnspan=2,padx=10,pady=10,sticky=(N,S))
@@ -116,21 +116,67 @@ class FPrincipal():
         self.rbFatigaNo.grid(row=5,column=1,pady=10)
         self.lblleucocitos.grid(row=6,column=0,columnspan=2,pady=10,sticky=(N,S))
         self.inpLeucocitos.grid(row=7,column=0,columnspan=2,pady=10,sticky=(N,S))
-        self.lblesperado.grid(row=8,column=0,columnspan=2,padx=10,pady=10,sticky=(N,S))
-        self.rbEsperadoSi.grid(row=9,column=0,pady=10,sticky=(N,S))
-        self.rbEsperadoNo.grid(row=9,column=1,pady=10,sticky=(N,S))
-        self.btnEntrenar.grid(row=10,column=0,columnspan=2,padx=10,pady=10,sticky=(N,S))
+        self.lblModo.grid(row=8,column=0,columnspan=2,pady=10)
+        self.rbPrueba.grid(row=9,column=0,pady=10)
+        self.rbEntrenamiento.grid(row=9,column=1,padx=10,pady=10,sticky=(N,S))
+        self.agregar_widget_entrenamiento()
+    def agregar_widget_prueba(self):
+        self.btnPrueba.grid(row=12,columnspan=2,padx=10,pady=10,sticky=(N,S))
+    def agregar_widget_entrenamiento(self):
+        self.lblesperado.grid(row=10,column=0,columnspan=2,padx=10,pady=10,sticky=(N,S))
+        self.rbEsperadoSi.grid(row=11,column=0,pady=10,sticky=(N,S))
+        self.rbEsperadoNo.grid(row=11,column=1,pady=10,sticky=(N,S))
+        self.btnEntrenar.grid(row=12,column=0,padx=10,pady=10,sticky=(N,S))
+        self.btnAgregar.grid(row=12,column=1,padx=10,pady=10,sticky=(N,S))
+        
+    def probar(self):
+        prediccion=self.perceptron.obtener_prediccion()
+        if type(prediccion)==type("string"):
+            messagebox.showerror(message="Debe entrenar primero", title="Error")
+        else:
+            if self.perceptron.obtener_prediccion():
+                messagebox.showwarning(message="El paciente tiene alta probabilidad de sufrir diabetes mellitus", title="Resultado")
+            else:
+                messagebox.showinfo(message="El paciente tiene baja probabilidad de sufrir diabetes mellitus", title="Resultado")
+        
+    def remove_widget_entrenamiento(self):
+        self.btnEntrenar.grid_remove()
+        self.btnAgregar.grid_remove()
+        self.lblesperado.grid_remove()
+        self.rbEsperadoSi.grid_remove()
+        self.rbEsperadoNo.grid_remove()
+    def remove_widget_prueba(self):
+        self.btnPrueba.grid_remove()
+
+    def filtrar_componentes(self):
+        if self.modo.get()==0:
+            self.remove_widget_entrenamiento()
+            self.agregar_widget_prueba()
+        else:
+            self.remove_widget_prueba()
+            self.agregar_widget_entrenamiento()
+
     def entrenar(self):
+        
+        resultados=self.perceptron.entrenar_perceptron()
+        
+        messagebox.showinfo(message="El entrenamiento ha concluido satisfactoriamente!", title="Entrenamiento")
+
+    def agregar_patron(self):
         valorGlucosa= 0 if float(self.glucosa.get())<5.7 else 1
         valorNeutrofilo= 0 if float(self.neutrofilos.get())<7600.0 else 1
-        self.perceptron.entrenar_perceptron([[self.herencia.get(),valorGlucosa,self.fatiga.get(),valorNeutrofilo]],[[self.resultado_esperado.get()]])
-        dic=self.perceptron.obtener_pesos()
-        self.resultados.delete(1.0,END)
-        self.resultados.insert(END,self.generarTextResultados(dic))
-    def generarTextResultados(self,dic):
+        self.perceptron.agregar_patrones([self.herencia.get(),valorGlucosa,self.fatiga.get(),valorNeutrofilo])
+        self.perceptron.agregar_valor_esperado([self.resultado_esperado.get()])
+        self.glucosa.set("")
+        self.neutrofilos.set("")
+
+    def generarJson(self,dic):
         text="***Resultados de ultimo entrenamiento***\n\nPeso final de neuronas escondidas: \n{}\nPeso final de bias escondida: \n{}\nPeso final de neuronas de salida: \n{}\nPeso final de bias de salida: \n{}\nActual error cuadratico medio con limite de {}: \n{}\nResultado Esperado: \n{}\n".format(dic.get("pesos_ocultos"),dic.get("bias_oculta"),dic.get("pesos_salidas"),dic.get("bias_salida"),dic.get("limite"),dic.get("error"),dic.get("resultado"))
         return text
-        
+
+    def generarMensajeFinal(self,resultados):
+       return "Resultado del entrenamiento: {:.5f}\nError cuadrático medio: {:.5f}".format(*resultados.get("resultado")[0],resultados.get("error"))
+
         
         
     def generarVistaConfiguracion(self):
@@ -157,6 +203,7 @@ class FPrincipal():
         self.limite_error_cuadratico.set(LIMITE_ERROR_CUADRATICO)
         self.herencia.set(0)
         self.fatiga.set(0)
+        self.modo.set(1)
     
 
 
